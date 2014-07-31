@@ -44,136 +44,172 @@ import edu.uci.ics.crawler4j.util.Util;
  */
 public class PatchedParser extends Configurable {
 
-        private AbstractParser htmlParser;
-        private ParseContext parseContext;
+	private AbstractParser htmlParser;
+	private ParseContext parseContext;
 
-        public PatchedParser(CrawlConfig config) {
-                super(config);
-                htmlParser = new HtmlParser();
-                parseContext = new ParseContext();
-                // PATCH: Do not discard <script> elements as org.apache.tika.parser.html.DefaultHtmlMapper does.
-                // Therefore, this HtmlMapper allows any element and attribute name - seems to be o.k. as long as
-                // edu.uci.ics.crawler4j.parser.[Patched]HtmlContentHandler itself filters related elements for outgoing URL evaluation.
-                parseContext.set(HtmlMapper.class, new HtmlMapper() {
-                    
-                    @Override
-                    public String mapSafeElement(String name) {
-                        return name.toLowerCase();
-                    }
-                    
-                    @Override
-                    public String mapSafeAttribute(String elementName, String attributeName) {
-                        return attributeName.toLowerCase();
-                    }
-                    
-                    @Override
-                    public boolean isDiscardElement(String name) {
-                        return false;
-                    }
-                });
-                // /PATCH
-        }
+	public PatchedParser(CrawlConfig config) {
+		super(config);
+		htmlParser = new HtmlParser();
+		parseContext = new ParseContext();
+		// PATCH: Do not discard <script> elements as org.apache.tika.parser.html.DefaultHtmlMapper does.
+		// Therefore, this HtmlMapper allows any element and attribute name - seems to be o.k. as long as
+		// edu.uci.ics.crawler4j.parser.[Patched]HtmlContentHandler itself filters related elements for outgoing URL evaluation.
+		parseContext.set(HtmlMapper.class, new HtmlMapper() {
 
-        public boolean parse(Page page, String contextURL) {
+			@Override
+			public String mapSafeElement(String name) {
+				return name.toLowerCase();
+			}
 
-                if (Util.hasBinaryContent(page.getContentType())) {
-                        if (!config.isIncludeBinaryContentInCrawling()) {
-                                return false;
-                        } else {
-                                page.setParseData(BinaryParseData.getInstance());
-                                return true;
-                        }
-                } else if (Util.hasPlainTextContent(page.getContentType())) {
-                        try {
-                                TextParseData parseData = new TextParseData();
-                                parseData.setTextContent(new String(page.getContentData(), page.getContentCharset()));
-                                page.setParseData(parseData);
-                                return true;
-                        } catch (Exception e) {
-                                e.printStackTrace();
-                        }
-                        return false;
-                }
+			@Override
+			public String mapSafeAttribute(String elementName, String attributeName) {
+				return attributeName.toLowerCase();
+			}
 
-                Metadata metadata = new Metadata();
-                // PATCH: Use PatchedHtmlContentHandler considering <script> elements for outgoing URL evaluation
-                PatchedHtmlContentHandler contentHandler = new PatchedHtmlContentHandler();
-                // /PATCH
-                InputStream inputStream = null;
-                try {
-                        inputStream = new ByteArrayInputStream(page.getContentData());
-                        htmlParser.parse(inputStream, contentHandler, metadata, parseContext);
-                } catch (Exception e) {
-                        e.printStackTrace();
-                } finally {
-                        try {
-                                if (inputStream != null) {
-                                        inputStream.close();
-                                }
-                        } catch (IOException e) {
-                                e.printStackTrace();
-                        }
-                }
+			@Override
+			public boolean isDiscardElement(String name) {
+				return false;
+			}
+		});
+		// /PATCH
+	}
 
-                if (page.getContentCharset() == null) {
-                        page.setContentCharset(metadata.get("Content-Encoding"));
-                }
+	public boolean parse(Page page, String contextURL) {
+		System.out.println("Page is : " + page.getWebURL().getURL());
 
-                HtmlParseData parseData = new HtmlParseData();
-                parseData.setText(contentHandler.getBodyText().trim());
-                parseData.setTitle(metadata.get(Metadata.TITLE));
+		if(Util.hasJavaScriptContent(page.getContentType())){
+			String contentType = page.getContentType();
+			String contentCharset = page.getContentCharset();
 
-                Set<String> urls = new HashSet<String>();
+			System.out.println("Content Type : " + contentType);
+			System.out.println("Content Charset : " + contentCharset);
 
-                String baseURL = contentHandler.getBaseUrl();
-                if (baseURL != null) {
-                        contextURL = baseURL;
-                }
+			if(contentCharset == null) {
+				//content with missing charset should use UTF-8
+				page.setContentCharset("UTF-8");
 
-                int urlCount = 0;
-                for (String href : contentHandler.getOutgoingUrls()) {
-                        href = href.trim();
-                        if (href.length() == 0) {
-                                continue;
-                        }
-                        String hrefWithoutProtocol = href.toLowerCase();
-                        if (href.startsWith("http://")) {
-                                hrefWithoutProtocol = href.substring(7);
-                        }
-                        if (!hrefWithoutProtocol.contains("javascript:") && !hrefWithoutProtocol.contains("@")) {
-                                String url = URLCanonicalizer.getCanonicalURL(href, contextURL);
-                                if (url != null) {
-                                        urls.add(url);
-                                        urlCount++;
-                                        if (urlCount > config.getMaxOutgoingLinksToFollow()) {
-                                                break;
-                                        }
-                                }
-                        }
-                }
+				contentCharset = page.getContentCharset();
+				System.out.println("New content Charset : " + contentCharset);
+			}
 
-                List<WebURL> outgoingUrls = new ArrayList<WebURL>();
-                for (String url : urls) {
-                        WebURL webURL = new WebURL();
-                        webURL.setURL(url);
-                        outgoingUrls.add(webURL);
-                }
-                parseData.setOutgoingUrls(outgoingUrls);
+			try {
+				JavaScriptParseData jsParseData = new JavaScriptParseData();
+				jsParseData.setJs(new String(page.getContentData(), contentCharset));
+				page.setParseData(jsParseData);
+				
+				if(DomainTrackerParser.containsTracker(jsParseData.getJs())) {
+					String parentUrl = page.getWebURL().getParentUrl();
 
-                try {
-                        if (page.getContentCharset() == null) {
-                                parseData.setHtml(new String(page.getContentData()));
-                        } else {
-                                parseData.setHtml(new String(page.getContentData(), page.getContentCharset()));
-                        }
-                } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                        return false;
-                }
+					if(parentUrl == null) {
+						parentUrl = page.getWebURL().getDomain();
+					}
+				}
+				return true;
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
-                page.setParseData(parseData);
-                return true;
+		if (Util.hasBinaryContent(page.getContentType())) {
+			if (!config.isIncludeBinaryContentInCrawling()) {
+				return false;
+			} else {
+				page.setParseData(BinaryParseData.getInstance());
+				return true;
+			}
+		} else if (Util.hasPlainTextContent(page.getContentType())) {
+			try {
+				TextParseData parseData = new TextParseData();
+				parseData.setTextContent(new String(page.getContentData(), page.getContentCharset()));
+				page.setParseData(parseData);
+				return true;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return false;
+		}
 
-        }
+		Metadata metadata = new Metadata();
+		// PATCH: Use PatchedHtmlContentHandler considering <script> elements for outgoing URL evaluation
+		PatchedHtmlContentHandler contentHandler = new PatchedHtmlContentHandler();
+		// /PATCH
+		InputStream inputStream = null;
+		try {
+			inputStream = new ByteArrayInputStream(page.getContentData());
+			htmlParser.parse(inputStream, contentHandler, metadata, parseContext);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (inputStream != null) {
+					inputStream.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (page.getContentCharset() == null) {
+			page.setContentCharset(metadata.get("Content-Encoding"));
+		}
+
+		HtmlParseData parseData = new HtmlParseData();
+		parseData.setText(contentHandler.getBodyText().trim());
+		parseData.setTitle(metadata.get(Metadata.TITLE));
+
+		Set<String> urls = new HashSet<String>();
+
+		String baseURL = contentHandler.getBaseUrl();
+		if (baseURL != null) {
+			contextURL = baseURL;
+		}
+
+		int urlCount = 0;
+		for (String href : contentHandler.getOutgoingUrls()) {
+			href = href.trim();
+			if (href.length() == 0) {
+				continue;
+			}
+			String hrefWithoutProtocol = href.toLowerCase();
+			if (href.startsWith("http://")) {
+				hrefWithoutProtocol = href.substring(7);
+			}
+			if (!hrefWithoutProtocol.contains("javascript:") && !hrefWithoutProtocol.contains("@")) {
+				String url = URLCanonicalizer.getCanonicalURL(href, contextURL);
+				if (url != null) {
+					urls.add(url);
+					urlCount++;
+					if (urlCount > config.getMaxOutgoingLinksToFollow()) {
+						break;
+					}
+				}
+			}
+		}
+
+		List<WebURL> outgoingUrls = new ArrayList<WebURL>();
+		for (String url : urls) {
+			WebURL webURL = new WebURL();
+			webURL.setURL(url);
+			outgoingUrls.add(webURL);
+		}
+		parseData.setOutgoingUrls(outgoingUrls);
+
+		try {
+			if (page.getContentCharset() == null) {
+				parseData.setHtml(new String(page.getContentData()));
+			} else {
+				parseData.setHtml(new String(page.getContentData(), page.getContentCharset()));
+			}
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		page.setParseData(parseData);
+		return true;
+
+	}
 
 }

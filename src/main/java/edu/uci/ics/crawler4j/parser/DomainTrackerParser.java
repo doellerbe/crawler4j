@@ -22,7 +22,7 @@ public class DomainTrackerParser {
 
 	private static List<String> domainTrackerList;
 	private static Set<String> trackerList = new HashSet<String>();
-	
+
 	static {
 		try {
 			domainTrackerList = FileUtils.readLines(file, ENCODING);
@@ -32,14 +32,14 @@ public class DomainTrackerParser {
 		}
 	}
 
-//	public static boolean isTracker(String resourceText) throws IOException {
-//		for(String tracker : domainTrackerList) {
-//			if(resourceText.contains(tracker)) {
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
+	//	public static boolean isTracker(String resourceText) throws IOException {
+	//		for(String tracker : domainTrackerList) {
+	//			if(resourceText.contains(tracker)) {
+	//				return true;
+	//			}
+	//		}
+	//		return false;
+	//	}
 
 	public static boolean containsTracker(String resourceText) throws IOException {
 		if(!trackerList.isEmpty() || trackerList == null){
@@ -47,6 +47,7 @@ public class DomainTrackerParser {
 		}
 
 		for(String tracker : domainTrackerList){
+//			System.out.println("Current tracker is : " + tracker);
 			if(resourceText.contains(tracker)) {
 				trackerList.add(tracker);
 				System.out.println("Added : " + tracker);
@@ -58,7 +59,7 @@ public class DomainTrackerParser {
 		return false;
 	}
 
-	public static Set<String> getDomainTrackers(){ //change back to public after testing
+	public static Set<String> getDomainTrackers() { //change back to public after testing
 		return trackerList;
 	}
 

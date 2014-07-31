@@ -40,9 +40,11 @@ private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
 //	private static final Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4"
 //			+ "|wav|avi|mov|mpeg|ram|m4v|pdf" + "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
-	private static final Pattern ASSET_FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?))$");
+	private static final Pattern ASSET_FILTERS = Pattern.compile(".*(\\.(js|bmp|gif|jpe?g|png|tiff?))$");
 
 	private static final Pattern TAG_FILTERS = Pattern.compile(".*(fls.doubleclick.net).*");
+	
+//	private static final Pattern JS_PATTERN = Pattern.compile(".*(js)");
 
 	/**
 	 * You should implement this function to specify whether the given url
@@ -63,13 +65,13 @@ private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
 		String href = url.getURL().toLowerCase();
 		String hrefDomain = url.getDomain().toLowerCase();
 
-		System.out.println("href : " + href);
-		System.out.println("hrefDomain : " + hrefDomain);
+//		System.out.println("href : " + href);
+//		System.out.println("hrefDomain : " + hrefDomain);
 
 		boolean fileExtFilter = ASSET_FILTERS.matcher(href).matches();
 		boolean tagManagerFilter = TAG_FILTERS.matcher(href).matches();
 
-		return !fileExtFilter && tagManagerFilter;
+		return fileExtFilter || tagManagerFilter;
 	}
 
 
@@ -119,7 +121,7 @@ private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println("WebUrl to be crawled : " + webUrl);
+				System.out.println("Outgoing URL : " + webUrl);
 			}
 		}
 

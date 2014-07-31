@@ -17,22 +17,22 @@
 
 package edu.uci.ics.crawler4j.crawler;
 
-import edu.uci.ics.crawler4j.fetcher.PageFetchResult;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpStatus;
+import org.apache.log4j.Logger;
+
 import edu.uci.ics.crawler4j.fetcher.CustomFetchStatus;
+import edu.uci.ics.crawler4j.fetcher.PageFetchResult;
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.frontier.DocIDServer;
 import edu.uci.ics.crawler4j.frontier.Frontier;
 import edu.uci.ics.crawler4j.parser.HtmlParseData;
 import edu.uci.ics.crawler4j.parser.ParseData;
-import edu.uci.ics.crawler4j.parser.Parser;
+import edu.uci.ics.crawler4j.parser.PatchedParser;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import edu.uci.ics.crawler4j.url.WebURL;
-
-import org.apache.http.HttpStatus;
-import org.apache.log4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * WebCrawler class in the Runnable class that is executed by each crawler
@@ -65,7 +65,7 @@ public class WebCrawler implements Runnable {
 	 * The parser that is used by this crawler instance to parse the content of
 	 * the fetched pages.
 	 */
-	private Parser parser;
+	private PatchedParser parser;
 
 	/**
 	 * The fetcher that is used by this crawler instance to fetch the content of
@@ -113,7 +113,7 @@ public class WebCrawler implements Runnable {
 		this.robotstxtServer = crawlController.getRobotstxtServer();
 		this.docIdServer = crawlController.getDocIdServer();
 		this.frontier = crawlController.getFrontier();
-		this.parser = new Parser(crawlController.getConfig());
+		this.parser = new PatchedParser(crawlController.getConfig());
 		this.myController = crawlController;
 		this.isWaitingForNewURLs = false;
 	}

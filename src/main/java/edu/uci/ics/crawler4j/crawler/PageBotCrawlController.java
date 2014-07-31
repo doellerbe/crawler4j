@@ -12,24 +12,24 @@ import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 public class PageBotCrawlController {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			System.out.println("Needed parameters: ");
-			System.out.println("\t rootFolder (it will contain intermediate crawl data)");
-			System.out.println("\t numberOfCralwers (number of concurrent threads)");
-			return;
-		}
+		//		if (args.length != 2) {
+		//			System.out.println("Needed parameters: ");
+		//			System.out.println("\t rootFolder (it will contain intermediate crawl data)");
+		//			System.out.println("\t numberOfCralwers (number of concurrent threads)");
+		//			return;
+		//		}
 
 		/*
 		 * crawlStorageFolder is a folder where intermediate crawl data is
 		 * stored.
 		 */
-		String crawlStorageFolder = args[0];
+		String crawlStorageFolder = "home/dorian/pagebot_data";
 
 		/*
 		 * numberOfCrawlers shows the number of concurrent threads that should
 		 * be initiated for crawling.
 		 */
-		int numberOfCrawlers = Integer.parseInt(args[1]);
+		int numberOfCrawlers = 1;
 
 		CrawlConfig config = new CrawlConfig();
 
@@ -85,9 +85,11 @@ public class PageBotCrawlController {
 		 * which are found in these pages
 		 */
 
-		controller.addSeed("http://www.ics.uci.edu/");
-		controller.addSeed("http://www.ics.uci.edu/~lopes/");
-		controller.addSeed("http://www.ics.uci.edu/~welling/");
+//		controller.addSeed("http://www.ics.uci.edu/");
+//		controller.addSeed("http://www.ics.uci.edu/~lopes/");
+//		controller.addSeed("http://www.ics.uci.edu/~welling/");
+		
+		controller.addSeed("http://www.americangreetings.com/");
 
 		/*
 		 * Start the crawl. This is a blocking operation, meaning that your code

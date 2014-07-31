@@ -7,15 +7,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.uci.ics.crawler4j.url.WebURL;
 
 public class PageDomainTrackerData {
-	
+
 	private String url;
 	private String tracker;
-	
+
 	public Map<WebURL, Set<String>> pageDomainTrackerMap;
-	
+
 	public PageDomainTrackerData(){
 		pageDomainTrackerMap = new ConcurrentHashMap<WebURL, Set<String>>();
-		
+
 	}
 
 	public String getUrl() {
@@ -33,5 +33,5 @@ public class PageDomainTrackerData {
 	public void setTracker(String tracker) {
 		this.tracker = tracker;
 	}
-	
+
 }
