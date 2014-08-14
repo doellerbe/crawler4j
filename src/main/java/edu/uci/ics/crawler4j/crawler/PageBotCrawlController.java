@@ -1,10 +1,11 @@
 package edu.uci.ics.crawler4j.crawler;
 
-
+import java.util.Set;
 
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
+import edu.uci.ics.crawler4j.url.AdvertiserSeedStore;
 
 /**
  * @author Yasser Ganjisaffar <lastname at gmail dot com>
@@ -24,17 +25,24 @@ public class PageBotCrawlController {
 		 * stored.
 		 */
 		String crawlStorageFolder = "home/dorian/pagebot_data";
-
+		
 		/*
 		 * numberOfCrawlers shows the number of concurrent threads that should
 		 * be initiated for crawling.
 		 */
-		int numberOfCrawlers = 1;
+		AdvertiserSeedStore advertiserSeedStore = new AdvertiserSeedStore();
+		Set<String> advSeedSet = advertiserSeedStore.getAdvertiserSeedStore();
+		
+		int seedListSize = advSeedSet.size();
+		
+		int numberOfCrawlers = seedListSize - 2;
+		
+		System.out.println("Number of Crawlers : " + numberOfCrawlers);
 
 		CrawlConfig config = new CrawlConfig();
 
 		config.setCrawlStorageFolder(crawlStorageFolder);
-
+		
 		/*
 		 * Be polite: Make sure that we don't send more than 1 request per
 		 * second (1000 milliseconds between requests).
@@ -45,7 +53,7 @@ public class PageBotCrawlController {
 		 * You can set the maximum crawl depth here. The default value is -1 for
 		 * unlimited depth
 		 */
-		config.setMaxDepthOfCrawling(2);
+		config.setMaxDepthOfCrawling(3);
 
 		/*
 		 * You can set the maximum number of pages to crawl. The default value
@@ -78,16 +86,24 @@ public class PageBotCrawlController {
 		RobotstxtConfig robotstxtConfig = new RobotstxtConfig();
 		RobotstxtServer robotstxtServer = new RobotstxtServer(robotstxtConfig, pageFetcher);
 		CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
-
-		/*
-		 * For each crawl, you need to add some seed urls. These are the first
-		 * URLs that are fetched and then the crawler starts following links
-		 * which are found in these pages
-		 */
+		
 
 //		controller.addSeed("http://www.ics.uci.edu/");
 //		controller.addSeed("http://www.ics.uci.edu/~lopes/");
 //		controller.addSeed("http://www.ics.uci.edu/~welling/");
+		
+		/*
+		 * For each crawl, you need to add some seed urls. These are the first
+		 * URLs that are fetched and then the crawler starts following links
+		 * which are found in these pages
+//		 */
+//		for(String seed : advSeedSet) {
+//			if(!seed.startsWith("http://")) {
+//				seed = "http://" + seed;
+//			}
+//			System.out.println("adding seed : " + seed);
+//			controller.addSeed(seed);
+//		}
 		
 		controller.addSeed("http://www.americangreetings.com/");
 

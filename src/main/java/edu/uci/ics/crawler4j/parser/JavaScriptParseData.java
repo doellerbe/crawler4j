@@ -17,7 +17,7 @@
 
 package edu.uci.ics.crawler4j.parser;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * 
@@ -30,7 +30,7 @@ public class JavaScriptParseData implements ParseData {
 	private String javascript;
 	private String jsResourceName;
 
-	private List<String> outgoingUrls;
+	private Set<String> outgoingUrls;
 
 	public String getJs() {
 		return javascript;
@@ -48,11 +48,11 @@ public class JavaScriptParseData implements ParseData {
 		this.jsResourceName = resourceName;
 	}
 
-	public List<String> getOutgoingUrls() {
+	public Set<String> getOutgoingUrls() {
 		return outgoingUrls;
 	}
 
-	public void setOutgoingUrls(List<String> outgoingUrls) {
+	public void setOutgoingUrls(Set<String> outgoingUrls) {
 		this.outgoingUrls = outgoingUrls;
 	}
 

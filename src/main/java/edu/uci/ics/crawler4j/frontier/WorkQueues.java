@@ -18,9 +18,11 @@
 package edu.uci.ics.crawler4j.frontier;
 
 import com.sleepycat.je.*;
+
 import edu.uci.ics.crawler4j.url.WebURL;
 import edu.uci.ics.crawler4j.util.Util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,12 +70,28 @@ public class WorkQueues {
 				cursor = urlsDB.openCursor(txn, null);
 				result = cursor.getFirst(key, value, null);
 
+				
+				//this is how to retrieve data from the db!!!!!
 				while (matches < max && result == OperationStatus.SUCCESS) {
 					if (value.getData().length > 0) {
 						results.add(webURLBinding.entryToObject(value));
 						matches++;
 					}
 					result = cursor.getNext(key, value, null);
+					
+					String urlValue = null;
+					
+					if(value.getData().length > 0){
+						
+						try {
+							urlValue = new String(value.getData(), "UTF-8");
+						} catch (UnsupportedEncodingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						System.out.println("The value of the url is : " + urlValue);
+					}
 				}
 			} catch (DatabaseException e) {
 				if (txn != null) {
@@ -110,7 +128,7 @@ public class WorkQueues {
 			try {
 				cursor = urlsDB.openCursor(txn, null);
 				result = cursor.getFirst(key, value, null);
-
+				
 				while (matches < count && result == OperationStatus.SUCCESS) {
 					cursor.delete();
 					matches++;
@@ -132,6 +150,54 @@ public class WorkQueues {
 			}
 		}
 	}
+	
+//	public boolean removeURL(WebURL webUrl) {
+//		
+//	}
+	
+	public void deleteUrl(WebURL url) throws DatabaseException {
+		synchronized (mutex) {
+			try {
+				
+				System.out.println("Deleting DocId : " + url.getDocid());
+				System.out.println("Parent DocID : " + url.getParentDocid());
+				
+				DatabaseEntry key = new DatabaseEntry(Util.int2ByteArray(url.getDocid()));				
+				Cursor cursor = null;
+				OperationStatus result;
+				DatabaseEntry value = new DatabaseEntry();
+				Transaction txn = env.beginTransaction(null, null);
+				try {
+					cursor = urlsDB.openCursor(txn, null);
+					result = cursor.getSearchKey(key, value, null);
+					
+					if (result == OperationStatus.SUCCESS) {
+						result = cursor.delete();
+//						if (result == OperationStatus.SUCCESS) {
+//							return true;
+//						}
+					}
+				} catch (DatabaseException e) {
+					if (txn != null) {
+						txn.abort();
+						txn = null;
+					}
+					throw e;
+				} finally {
+					if (cursor != null) {
+						cursor.close();
+					}
+					if (txn != null) {
+						txn.commit();
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+//		return false;
+	}
+	
 
 	public void put(WebURL url) throws DatabaseException {
 		
@@ -159,6 +225,7 @@ public class WorkQueues {
 		} else {
 			txn = null;
 		}
+		
 		urlsDB.put(txn, new DatabaseEntry(keyData), value);
 		if (resumable) {
 			if (txn != null) {

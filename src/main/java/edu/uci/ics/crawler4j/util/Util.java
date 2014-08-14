@@ -90,7 +90,7 @@ public class Util {
 		if(contentType != null) {
 			String typeStr = contentType.toLowerCase();
 
-			if(typeStr.contains("javascript")){
+			if(typeStr.contains("javascript")) {
 				return true;
 			}
 		}

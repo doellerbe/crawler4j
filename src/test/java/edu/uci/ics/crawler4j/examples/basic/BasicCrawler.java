@@ -40,7 +40,17 @@ public class BasicCrawler extends WebCrawler {
 	@Override
 	public boolean shouldVisit(WebURL url) {
 		String href = url.getURL().toLowerCase();
-		return !FILTERS.matcher(href).matches() && href.startsWith("http://www.ics.uci.edu/");
+		String hrefParent = url.getParentUrl().toLowerCase();
+		
+		if(hrefParent == null){
+			hrefParent = href;
+			
+			
+		}
+		
+		System.out.println("Href parent! " + hrefParent);
+		
+		return !FILTERS.matcher(href).matches() && href.startsWith(hrefParent);
 	}
 
 	/**

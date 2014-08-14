@@ -13,41 +13,35 @@ import org.apache.commons.io.FileUtils;
  * @author dorian
  *
  * Utility to read from the domain-trackers.txt file and data store for crawled data.
- * ConcurrentHashMap of ensures that all reads and writes are thread-safe.
+ * ConcurrentHashMap ensures that all reads and writes are thread-safe.
  */
-public class DomainTrackerParser {
+public final class DomainTrackerParser {
 
 	private static final File file = new File("/home/dorian/dstillery-workspace/PageBotV2/src/main/resources/domain-trackers.txt");
+	
 	private static final String ENCODING = "UTF-8";
 
 	private static List<String> domainTrackerList;
 	private static Set<String> trackerList = new HashSet<String>();
-
+	
+	//there should never be an instance of this class created
+	private DomainTrackerParser() {}
+	
 	static {
 		try {
 			domainTrackerList = FileUtils.readLines(file, ENCODING);
-		}catch(IOException io) {
-			io.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 			throw new RuntimeException();
 		}
 	}
-
-	//	public static boolean isTracker(String resourceText) throws IOException {
-	//		for(String tracker : domainTrackerList) {
-	//			if(resourceText.contains(tracker)) {
-	//				return true;
-	//			}
-	//		}
-	//		return false;
-	//	}
-
+	
 	public static boolean containsTracker(String resourceText) throws IOException {
 		if(!trackerList.isEmpty() || trackerList == null){
 			trackerList.clear();
 		}
 
-		for(String tracker : domainTrackerList){
-//			System.out.println("Current tracker is : " + tracker);
+		for(final String tracker : domainTrackerList){
 			if(resourceText.contains(tracker)) {
 				trackerList.add(tracker);
 				System.out.println("Added : " + tracker);
@@ -62,11 +56,15 @@ public class DomainTrackerParser {
 	public static Set<String> getDomainTrackers() { //change back to public after testing
 		return trackerList;
 	}
+	
+//	public static void setDomainTrackerFile(String fileName){
+//		fileName = fileName;
+//	}
 
 	public static void main(String[] args) throws IOException {
 		String jsResource = "http://dsa.csdata1.com/ http://agkn";
 		//		String jsResource2 = "dsa.csdata1.com";
-
+		
 		boolean hasTracker1 = DomainTrackerParser.containsTracker(jsResource);
 		//		boolean hasTracker2 = DomainTrackerParser.containsTracker(jsResource2);
 

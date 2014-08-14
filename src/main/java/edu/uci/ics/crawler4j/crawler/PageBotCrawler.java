@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import edu.uci.ics.crawler4j.parser.DomainTrackerParser;
 import edu.uci.ics.crawler4j.parser.HtmlParseData;
+import edu.uci.ics.crawler4j.parser.JavaScriptParseData;
 import edu.uci.ics.crawler4j.url.WebURL;
 
 /**
@@ -32,19 +33,19 @@ import edu.uci.ics.crawler4j.url.WebURL;
  * Extended for the purposes at Dstillery
  */
 public class PageBotCrawler extends WebCrawler {
-	
-private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
-	
-	private PageDomainTrackerData pgDomainTrackerData;
 
-//	private static final Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4"
-//			+ "|wav|avi|mov|mpeg|ram|m4v|pdf" + "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
+	private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
+
+//	private PageDomainTrackerData pgDomainTrackerData;
+
+	//	private static final Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4"
+	//			+ "|wav|avi|mov|mpeg|ram|m4v|pdf" + "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
 	private static final Pattern ASSET_FILTERS = Pattern.compile(".*(\\.(js|bmp|gif|jpe?g|png|tiff?))$");
-
 	private static final Pattern TAG_FILTERS = Pattern.compile(".*(fls.doubleclick.net).*");
-	
-//	private static final Pattern JS_PATTERN = Pattern.compile(".*(js)");
+	private static final Pattern DOMAIN_FILTER = Pattern.compile(".*(americangreetings.com).*");
+
+	private static final Pattern JS_PATTERN = Pattern.compile(".*(js)");
 
 	/**
 	 * You should implement this function to specify whether the given url
@@ -57,23 +58,28 @@ private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
 	//	}
 
 	/**
-	 * PageBot needs to consider js, image assets, and tag containers. These are where most, 
-	 * if not, all trackers should have a presence.
+	 * PageBot needs to consider js, image assets, and tag containers when crawling
+	 * for trackers
 	 */
 	@Override
 	public boolean shouldVisit(WebURL url) {
 		String href = url.getURL().toLowerCase();
-		String hrefDomain = url.getDomain().toLowerCase();
+//		String hrefDomain = url.getDomain().toLowerCase();
 
-//		System.out.println("href : " + href);
-//		System.out.println("hrefDomain : " + hrefDomain);
+		//		System.out.println("href : " + href);
+		//		System.out.println("hrefDomain : " + hrefDomain);
 
 		boolean fileExtFilter = ASSET_FILTERS.matcher(href).matches();
 		boolean tagManagerFilter = TAG_FILTERS.matcher(href).matches();
+		boolean tldPrivateFilter;
 
-		return fileExtFilter || tagManagerFilter;
+		return fileExtFilter || tagManagerFilter || (DOMAIN_FILTER.matcher(href).matches());
+		
+//		System.out.println(href + " : " + fileExtFilter);
+//		System.out.println(href + " : " + tagManagerFilter);
+//		
+//		return JS_PATTERN.matcher(href).matches();
 	}
-
 
 	/**
 	 * This function is called when a page is fetched and ready to be processed
@@ -95,6 +101,22 @@ private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
 		System.out.println("Path: '" + path + "'");
 		System.out.println("Parent page: " + parentUrl);
 
+		if(page.getParseData() instanceof JavaScriptParseData) {
+			System.out.println("Got an instance of JS Parse DATA!!!!");
+			System.out.println("Parent Page of JS data is : " + page.getWebURL().getParentUrl());
+
+			JavaScriptParseData jsParseData =  (JavaScriptParseData) page.getParseData();
+			String jsText = jsParseData.getJs();
+
+			try {
+				if(DomainTrackerParser.containsTracker(jsText)){
+					domainTrackerSet.add(url);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 		if (page.getParseData() instanceof HtmlParseData) {
 			HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
 			String text = htmlParseData.getText();
@@ -111,17 +133,14 @@ private Set<String> domainTrackerSet = new ConcurrentSkipListSet<String>();
 				try {
 					if(urlString != null && DomainTrackerParser.containsTracker(urlString)) {
 						System.out.println("added a tracker to the set : " + urlString);
-
-						if(true){
-
-						}
 						domainTrackerSet.add(urlString);
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				System.out.println("Outgoing URL : " + webUrl);
+//				System.out.println("Outgoing URL : " + webUrl);
+//				System.out.println(domainTrackerSet);
 			}
 		}
 

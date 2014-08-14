@@ -17,15 +17,17 @@
 
 package edu.uci.ics.crawler4j.frontier;
 
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
+
 import edu.uci.ics.crawler4j.crawler.Configurable;
 import edu.uci.ics.crawler4j.crawler.CrawlConfig;
 import edu.uci.ics.crawler4j.frontier.Counters.ReservedCounterNames;
 import edu.uci.ics.crawler4j.url.WebURL;
-import org.apache.log4j.Logger;
-
-import java.util.List;
 
 /**
  * @author Yasser Ganjisaffar <lastname at gmail dot com>
@@ -118,6 +120,25 @@ public class Frontier extends Configurable {
 				}
 			} catch (DatabaseException e) {
 				logger.error("Error while puting the url in the work queue.");
+			}
+		}
+	}
+	
+	public void unscheduleAll(List<WebURL> urls) {
+		//
+	}
+	
+	public void unschedule(WebURL url) {
+		int maxPagesToFetch = config.getMaxPagesToFetch();
+		synchronized (mutex) {
+			try {
+				if(maxPagesToFetch < 0 || scheduledPages < maxPagesToFetch){
+					workQueues.deleteUrl(url);
+					scheduledPages--;
+					counters.decrement(Counters.ReservedCounterNames.SCHEDULED_PAGES);
+				}
+			} catch(Exception ex){
+				//do stuff
 			}
 		}
 	}

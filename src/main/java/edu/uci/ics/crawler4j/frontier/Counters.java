@@ -117,6 +117,17 @@ public class Counters extends Configurable {
 			setValue(name, prevValue + addition);
 		}
 	}
+	
+	public void decrement(String name) {
+		decrement(name, 1);
+	}
+	
+	public void decrement(String name, long subtraction) {
+		synchronized (mutex) {
+			long prevValue = getValue(name);
+			setValue(name, prevValue - subtraction);
+		}
+	}
 
 	public void sync() {
 		if (config.isResumableCrawling()) {

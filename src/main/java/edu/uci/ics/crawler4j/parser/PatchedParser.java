@@ -85,7 +85,7 @@ public class PatchedParser extends Configurable {
 			System.out.println("Content Charset : " + contentCharset);
 
 			if(contentCharset == null) {
-				//content with missing charset should use UTF-8
+				//content with missing charset should use UTF-8	
 				page.setContentCharset("UTF-8");
 
 				contentCharset = page.getContentCharset();
@@ -95,6 +95,7 @@ public class PatchedParser extends Configurable {
 			try {
 				JavaScriptParseData jsParseData = new JavaScriptParseData();
 				jsParseData.setJs(new String(page.getContentData(), contentCharset));
+				jsParseData.setJsResourceName(page.getWebURL().getURL());
 				page.setParseData(jsParseData);
 				
 				if(DomainTrackerParser.containsTracker(jsParseData.getJs())) {

@@ -126,7 +126,8 @@ public class CrawlConfig {
 	 * password.
 	 */
 	private String proxyPassword = null;
-
+	
+	
 	public CrawlConfig() {
 	}
 
@@ -399,5 +400,4 @@ public class CrawlConfig {
 		sb.append("Proxy password: " + getProxyPassword() + "\n");
 		return sb.toString();
 	}
-
 }
